@@ -27,6 +27,7 @@ class Extension(ext.Extension):
         schema['mqttport'] = config.Integer()
         schema['username'] = config.String()
         schema['password'] = config.String()
+        schema['json_state'] = config.Boolean()
         return schema
 
     def setup(self, registry):

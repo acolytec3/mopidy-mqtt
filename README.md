@@ -49,6 +49,7 @@ mqttport = <mqtt port>
 username = <mqtt username> (Optional)
 password = <mqtt password> (Optional)
 topic = <topic, e.g. home/livingroom/music>
+json_state = false (mqtt state will be a json struct instead of a string)
 ```
 
 Restart Mopidy with `sudo service mopidy restart`

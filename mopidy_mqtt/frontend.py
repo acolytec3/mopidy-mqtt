@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 # stdlib imports
 import logging
 import time
+import json
 
 from mopidy import core
 
@@ -25,11 +26,15 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.mqttClient.on_connect = self.mqtt_on_connect     
         
         self.config = config['mqtthook']
-        host = self.config['mqtthost']
-        port = self.config['mqttport']
         self.topic = self.config['topic']
+        self.json_state = self.config['json_state']
+
         if self.config['username'] and self.config['password']:
             self.mqttClient.username_pw_set(self.config['username'], password=self.config['password'])
+
+        host = self.config['mqtthost']
+        port = self.config['mqttport']
+
         self.mqttClient.connect_async(host, port, 60)        
         
         self.mqttClient.loop_start()
@@ -84,32 +89,43 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.mqttClient.disconnect()
         
     def stream_title_changed(self, title):
+        if self.json_state:  title = {"title": title}
         self.MQTTHook.publish("/nowplaying", title)
 
     def playback_state_changed(self, old_state, new_state):
-        self.MQTTHook.publish("/state", new_state)
-        if (new_state == "stopped"):
+        payload = new_state
+        if self.json_state:
+            payload = {"old_state": old_state, "new_state": new_state}
+        self.MQTTHook.publish("/state", payload)
+        if (new_state == "stopped" and not self.json_state):
             self.MQTTHook.publish("/nowplaying", "stopped")
         
     def track_playback_started(self, tl_track):
         track = tl_track.track
         artists = ', '.join(sorted([a.name for a in track.artists]))
-        self.MQTTHook.publish("/nowplaying", artists + ":" + track.name)
+        payload = artists + ":" + track.name
+        if self.json_state:
+            payload = {"title": track.name, "artist": artists}
+        self.MQTTHook.publish("/nowplaying", payload)
         try:
             album = track.album
-            albumImage = next(iter(album.images))
-            self.MQTTHook.publish("/image", albumImage)
+            payload = next(iter(album.images))
+            if self.json_state: 
+                payload = {"image_url": albumImage}
+            self.MQTTHook.publish("/image", payload)
         except:
             logger.debug("no image")
         
 class MQTTHook():
     def __init__(self, frontend, core, config, client):
-        self.config = config['mqtthook']        
+        self.config = config['mqtthook']
         self.mqttclient = client
        
     def publish(self, topic, state):
         full_topic = self.config['topic'] + topic
         try:
+            if self.config['json_state']:
+                state = json.dumps(state)
             rc = self.mqttclient.publish(full_topic, state)
             if rc[0] == mqtt.MQTT_ERR_NO_CONN:            
                 logger.warn("Error during publish: MQTT_ERR_NO_CONN")
