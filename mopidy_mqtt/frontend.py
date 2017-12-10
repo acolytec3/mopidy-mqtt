@@ -67,6 +67,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         if msg.topic == topPlay:
             self.core.tracklist.clear()
             self.core.tracklist.add(None, None, str(msg.payload), None)
+            self.core.tracklist.shuffle() #TODO move this as an option?  play_shuffle?
             self.core.playback.play()
         elif msg.topic == topControl:
             if msg.payload == "stop":
@@ -81,6 +82,12 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
                 self.core.playback.next()
             elif msg.payload == "previous":
                 self.core.playback.previous()
+            elif msg.payload == "shuffle":
+                self.core.tracklist.shuffle()
+            elif msg.payload == "repeat_on":
+                self.core.tracklist.set_repeat(True)
+            elif msg.payload == "repeat_off":
+                self.core.tracklist.set_repeat(False)
         elif msg.topic == topVolume:
             try:
                 volume=int(msg.payload)
