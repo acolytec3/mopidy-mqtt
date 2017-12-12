@@ -114,7 +114,8 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
           images = []
           imgUris = self.core.library.get_images([track_uri]).get()
           for k in imgUris:
-            images.append(imgUris[k][0].uri)
+            if len(imgUris[k]) > 0:
+              images.append(imgUris[k][0].uri)
       
           image = None
           if len(images) > 0:
