@@ -71,7 +71,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
             self.core.tracklist.add(None, 0, str(msg.payload), None).get()
             logger.info(self.core.tracklist.get_length().get())
             logger.info(self.core.tracklist.index().get())
-            #self.core.tracklist.shuffle() #TODO move this as an option?  play_shuffle?
+            self.core.tracklist.shuffle().get() #TODO move this as an option?  play_shuffle?
             self.core.playback.play()
         elif msg.topic == topControl:
             if msg.payload == "stop":
