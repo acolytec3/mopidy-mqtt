@@ -65,9 +65,10 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         topCurrentState = self.topic + "/current_state"
 
         if msg.topic == topPlay:
+            self.core.playback.stop().get()
             self.core.tracklist.clear().get()
             logger.info(" Loading in playlist " + msg.payload)
-            self.core.tracklist.add(None, None, str(msg.payload), None).get()
+            self.core.tracklist.add(None, 0, str(msg.payload), None).get()
             logger.info(self.core.tracklist.get_length().get())
             logger.info(self.core.tracklist.index().get())
             #self.core.tracklist.shuffle() #TODO move this as an option?  play_shuffle?
