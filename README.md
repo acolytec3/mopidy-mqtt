@@ -1,3 +1,4 @@
+# This repository is deprecated.  I am no longer maintaining this.
 # Features
 
 This is a fork of a Mopidy Frontend Extension that allows you to control Mopidy with MQTT and retrieve some information from Mopidy via MQTT.
